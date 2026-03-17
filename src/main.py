@@ -1,12 +1,12 @@
 import os
-from typing import List, Optional
+from typing import List
 
 from fastapi import FastAPI, Depends, HTTPException
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from . import models, database, repositories
 from .services.aws_service import AWSService
+from . import schemas
 
 models.Base.metadata.create_all(bind=database.engine)
 
@@ -20,102 +20,20 @@ def get_db():
     finally:
         db.close()
 
-
-class ClientBase(BaseModel):
-    rfc: str
-    razon_social: str
-    email: str
-    comercial_name: Optional[str] = None
-    telefono: Optional[str] = None
-
-
-class ClientCreate(ClientBase):
-    pass
-
-
-class ClientRead(ClientBase):
-    id: int
-
-    class Config:
-        orm_mode = True
-
-
-class ProductBase(BaseModel):
-    name: str
-    unit: Optional[str] = None
-    base_price: float
-
-
-class ProductCreate(ProductBase):
-    pass
-
-
-class ProductRead(ProductBase):
-    id: int
-
-    class Config:
-        orm_mode = True
-
-
-class AddressBase(BaseModel):
-    domicilio: str
-    colonia: Optional[str] = None
-    municipio: Optional[str] = None
-    estado: Optional[str] = None
-    address_type: Optional[str] = None
-
-
-class AddressCreate(AddressBase):
-    pass
-
-
-class AddressRead(AddressBase):
-    id: int
-
-    class Config:
-        orm_mode = True
-
-
-class NoteItem(BaseModel):
-    product_id: int
-    unit_price: float
-    quantity: int
-
-
-class SalesNoteCreate(BaseModel):
-    folio: str
-    client_id: int
-    fac_address_id: int
-    send_address_id: int
-    items: List[NoteItem]
-
-
-class SalesNoteRead(BaseModel):
-    id: int
-    folio: str
-    client_id: int
-    fac_address_id: int
-    send_address_id: int
-    total: float
-
-    class Config:
-        orm_mode = True
-
-
 aws_service = AWSService()
 
-@app.post("/clients/", response_model=ClientRead)
-def create_client(client: ClientCreate, db: Session = Depends(get_db)):
+@app.post("/clients/", response_model=schemas.ClientRead)
+def create_client(client: schemas.ClientCreate, db: Session = Depends(get_db)):
     repo = repositories.ClientRepository(db)
     return repo.create(client)
 
 
-@app.get("/clients/", response_model=List[ClientRead])
+@app.get("/clients/", response_model=List[schemas.ClientRead])
 def list_clients(db: Session = Depends(get_db)):
     return repositories.ClientRepository(db).list()
 
 
-@app.get("/clients/{client_id}", response_model=ClientRead)
+@app.get("/clients/{client_id}", response_model=schemas.ClientRead)
 def get_client(client_id: int, db: Session = Depends(get_db)):
     obj = repositories.ClientRepository(db).get(client_id)
     if not obj:
@@ -130,17 +48,17 @@ def delete_client(client_id: int, db: Session = Depends(get_db)):
 
 
 # ----- product endpoints -----
-@app.post("/products/", response_model=ProductRead)
-def create_product(product: ProductCreate, db: Session = Depends(get_db)):
+@app.post("/products/", response_model=schemas.ProductRead)
+def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
     return repositories.ProductRepository(db).create(product)
 
 
-@app.get("/products/", response_model=List[ProductRead])
+@app.get("/products/", response_model=List[schemas.ProductRead])
 def list_products(db: Session = Depends(get_db)):
     return repositories.ProductRepository(db).list()
 
 
-@app.get("/products/{product_id}", response_model=ProductRead)
+@app.get("/products/{product_id}", response_model=schemas.ProductRead)
 def get_product(product_id: int, db: Session = Depends(get_db)):
     obj = repositories.ProductRepository(db).get(product_id)
     if not obj:
@@ -155,17 +73,17 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
 
 
 # ----- address endpoints -----
-@app.post("/addresses/", response_model=AddressRead)
-def create_address(address: AddressCreate, db: Session = Depends(get_db)):
+@app.post("/addresses/", response_model=schemas.AddressRead)
+def create_address(address: schemas.AddressCreate, db: Session = Depends(get_db)):
     return repositories.AddressRepository(db).create(address)
 
 
-@app.get("/addresses/", response_model=List[AddressRead])
+@app.get("/addresses/", response_model=List[schemas.AddressRead])
 def list_addresses(db: Session = Depends(get_db)):
     return repositories.AddressRepository(db).list()
 
 
-@app.get("/addresses/{address_id}", response_model=AddressRead)
+@app.get("/addresses/{address_id}", response_model=schemas.AddressRead)
 def get_address(address_id: int, db: Session = Depends(get_db)):
     obj = repositories.AddressRepository(db).get(address_id)
     if not obj:
@@ -180,8 +98,8 @@ def delete_address(address_id: int, db: Session = Depends(get_db)):
 
 
 # ----- sales note endpoint -----
-@app.post("/salesnotes/", response_model=SalesNoteRead)
-def create_salesnote(note: SalesNoteCreate, db: Session = Depends(get_db)):
+@app.post("/salesnotes/", response_model=schemas.SalesNoteRead)
+def create_salesnote(note: schemas.SalesNoteCreate, db: Session = Depends(get_db)):
     # create the note and its lines
     sn_repo = repositories.SalesNoteRepository(db)
     note_obj = sn_repo.create_with_items(note)
