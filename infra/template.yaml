@@ -1,0 +1,17 @@
+# Simplified AWS SAM Template
+Resources:
+  # The Object Storage for your PDFs
+  NoteStorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: "your-expediente-esi3898k-examen1"
+
+  # The Relational Database (RDS)
+  MyDatabase:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: '20'
+      DBInstanceClass: db.t3.micro # Free tier eligible
+      Engine: postgres
+      MasterUsername: admin
+      MasterUserPassword: MySecurePassword123
