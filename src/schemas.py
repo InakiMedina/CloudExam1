@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
 class ClientBase(BaseModel):
@@ -16,9 +16,8 @@ class ClientCreate(ClientBase):
 
 class ClientRead(ClientBase):
     id: int
-
-    class Config:
-        orm_mode = True
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProductBase(BaseModel):
@@ -34,8 +33,7 @@ class ProductCreate(ProductBase):
 class ProductRead(ProductBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AddressBase(BaseModel):
@@ -53,23 +51,19 @@ class AddressCreate(AddressBase):
 class AddressRead(AddressBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
-
-class NoteItem(BaseModel):
+class NoteItemCreate(BaseModel):
     product_id: int
-    unit_price: float
     quantity: int
 
-
-class SalesNoteCreate(BaseModel):
-    folio: str
-    client_id: int
-    fac_address_id: int
-    send_address_id: int
-    items: List[NoteItem]
-
+class NoteItemRead(BaseModel):
+    product_id: int
+    quantity: int
+    unit_price: float
+    total: float
+    
+    model_config = ConfigDict(from_attributes=True)
 
 class SalesNoteRead(BaseModel):
     id: int
@@ -78,6 +72,13 @@ class SalesNoteRead(BaseModel):
     fac_address_id: int
     send_address_id: int
     total: float
+    contents: List[NoteItemRead] 
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+
+class SalesNoteCreate(BaseModel):
+    folio: str
+    client_id: int
+    fac_address_id: int
+    send_address_id: int
+    items: List[NoteItemCreate]
